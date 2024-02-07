@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { Room } from "../interface/room";
-import { Module, isModule } from "../interface/module";
+import { HeatingModule, LightingModule, Module, MusicModule, isModule, isHeatingModule, isMusicModule, isLightingModule } from "../interface/module";
 import RoomsJson from '../data/rooms.json'
 import { HttpStatus } from "../enum/httpStatus.enum";
 import { HttpResponse } from "../domain/response";
 import fs from 'fs';
+import { ModuleType } from "../enum/moduleType.enum";
 
 const PATH = "./src/data/rooms.json";
 
@@ -144,7 +145,7 @@ export const updateRoom = async (req: Request, res: Response) => {
 
           console.log(roomToUpdate);
           return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Updated room with ID ${id}`, roomToUpdate))
-        })
+        });
       
       // Error parsing json
       } catch (error) {
@@ -169,13 +170,129 @@ export const deleteRoom = (req: Request, res: Response) => {
   //return res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, 'Room not found'));
 };
 
+
+
+
+/**
+ * Add module to room by Id
+ * @param req 
+ * @param res 
+ */
 export const addModule = (req: Request, res: Response) => {
   const roomId = Number(req.params.roomId);
+  const moduleType: String = req.body.type;
+  let newModule: Module | HeatingModule | MusicModule | LightingModule | undefined;
+  let rooms: Room[];
+  let room: Room | undefined;
+  let index: number = -1;
 
-  const newModule: Module = {
+  switch (moduleType) {
+    case "heating":
+      /*newModule = {
+        id: req.body.id,
+        name: req.body.name,
+        type: ModuleType.HEATING,
+        thermostats: req.body.thermostats,
+        tempHigh: req.body.tempHigh,
+        tempLow: req.body.tempLow,
+        schedule: req.body.schedule
+      };*/
+
+      newModule =
+        isHeatingModule(req.body)
+          /*isHeatingModule({
+            id: req.body.id,
+            name: req.body.name,
+            type: ModuleType.HEATING,
+            thermostats: req.body.thermostats,
+            tempHigh: req.body.tempHigh,
+            tempLow: req.body.tempLow,
+            schedule: req.body.schedule
+          })*/
+          ? {
+            id: req.body.id,
+            name: req.body.name,
+            type: ModuleType.HEATING,
+            thermostats: req.body.thermostats,
+            tempHigh: req.body.tempHigh,
+            tempLow: req.body.tempLow,
+            schedule: req.body.schedule
+          }
+          : undefined
+        ;
+      break;
+    case "music":
+      newModule = isMusicModule(req.body)
+        ? {
+          id: req.body.id,
+          name: req.body.name,
+          type: ModuleType.MUSIC,
+          volume: req.body.volume
+        }
+        : undefined;
+      break;
+    case "lighting":
+      newModule = isLightingModule(req.body)
+        ? {
+          id: req.body.id,
+          name: req.body.name,
+          type: ModuleType.LIGHTING
+        }
+        : undefined;
+      break;
+    default:
+      break;
+  }
+
+  /*const newModule: Module = {
     id: req.body.id,
     name: req.body.name,
-    type: req.body.type
+    type: moduleType
+  };*/
+
+  if (!newModule)
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Invalid module structure'));
+
+  try {
+    const data = fs.readFile(PATH, "utf-8", (error, data) => {
+      if (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Module couldn\'t be added'));
+      }
+
+      try {
+        rooms = JSON.parse(data);
+        room = rooms.find((room, i) => {
+          if (room.id == roomId) {
+            index = i;
+            return room;
+          }
+        });
+
+        //room && (room.modules = [...room.modules, newModule]);
+
+        room && (rooms[index].modules = [...room.modules as Module[], newModule as Module]);
+
+        fs.writeFile("./src/data/roomsTest.json", JSON.stringify(rooms, null, 2), (error) => {
+          
+          // Error writing file
+          if (error) {
+            console.error(error);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Module couldn\'t be added'));
+          }
+
+          console.log(rooms[index]);
+          return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Added module to room with ID ${roomId}`, rooms[index]))
+        });
+
+      } catch (error) {
+        console.error("Error parsing json string: ", error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Module couldn\'t be added'));
+      }
+    });
+
+  } catch (error) { 
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Module couldn\'t be added'));
   }
 }
 
@@ -188,7 +305,7 @@ export const getModules = (req: Request, res: Response) => {
 
     const data = fs.readFile(PATH, "utf8", (error, data) => {
       if (error) {
-          console.log(error);
+          console.error(error);
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Not found'));
       }
 
@@ -196,7 +313,7 @@ export const getModules = (req: Request, res: Response) => {
         rooms = JSON.parse(data);
         room = rooms.find(room => room.id == roomId);
       } catch (error) {
-        console.log("Error parsing json string: ", error);
+        console.error("Error parsing json string: ", error);
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Rooms couldn\'t be loaded'));
       }
       return room ? res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found ${room.modules.length} ${room.modules.length > 1 ? "modules" : "module"} for room with ID ${roomId}`, room.modules)) : res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, `Couldn't find room with ID ${roomId}`));

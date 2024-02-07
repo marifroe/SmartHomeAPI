@@ -14,8 +14,15 @@
     "name": "Bedroom",
     "modules": [
       {
+        "id": 10,
+        "name": "heating",
+        "type": "heating"
+      },
+      {
         "id": 11,
-        "name": "light"
+        "name": "heat",
+        "type": "music",
+        "volume": 3
       }
     ]
   },
