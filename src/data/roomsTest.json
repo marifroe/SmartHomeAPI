@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "Living Room",
+    "modules": []
+  },
+  {
+    "id": 2,
+    "name": "Kitchen",
+    "modules": []
+  },
+  {
+    "id": 3,
+    "name": "Bedroom",
+    "modules": [
+      {
+        "id": 11,
+        "name": "light"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Child's Room",
+    "modules": []
+  },
+  {
+    "id": 5,
+    "name": "Bathroom",
+    "modules": []
+  }
+]

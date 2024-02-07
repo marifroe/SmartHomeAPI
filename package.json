@@ -1,0 +1,23 @@
+{
+  "name": "smarthomeapi",
+  "version": "1.0.0",
+  "description": "NodeJs API for Smart Home",
+  "main": "index.ts",
+  "scripts": {
+    "start:build": "tsc -p .",
+    "start:dev": "nodemon --exec ts-node src/index.ts",
+    "start:prod": "tsc -p . && NODE_ENV=prod node dist/index.js",
+    "tsc": "tsc"
+  },
+  "author": "Marilena Froehlich",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
