@@ -1,7 +1,7 @@
-import { Router } from "express";
-import { getRooms, getRoom, updateRoom, getModules, addModule } from "../controller/room.controller";
+import { Router } from "express"
+import { getRooms, getRoom, addRoom, updateRoom, deleteRoom, getModules, addModule } from "../controller/room.controller"
 
-const roomRoutes = Router();
+const roomRoutes = Router()
 
 roomRoutes.route('/')
   .get(getRooms)
@@ -9,11 +9,12 @@ roomRoutes.route('/')
   
 roomRoutes.route('/:roomId')
   .get(getRoom)
-  .put(updateRoom);
-//.delete(deletePatient);
+  .put(updateRoom)
+  .delete(deleteRoom)
+  .post(addRoom)
   
 roomRoutes.route('/:roomId/modules')
   .get(getModules)
-  .post(addModule);
+  .post(addModule)
 
-export default roomRoutes;
+export default roomRoutes
