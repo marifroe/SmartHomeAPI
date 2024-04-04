@@ -1,0 +1,76 @@
+[
+  {
+    "id": 1,
+    "name": "Living Room",
+    "heating": [],
+    "lighting": [
+      {
+        "id": "DECT_130770157363-1",
+        "name": "Haartrockner"
+      }
+    ],
+    "others": [
+      {
+        "id": "onkyo.0.Device",
+        "name": "Main",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Kitchen",
+    "heating": [],
+    "lighting": [],
+    "others": [
+      {
+        "id": "onkyo.1.Device",
+        "name": "Lautsprecher Kueche",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Bedroom",
+    "heating": [],
+    "lighting": [],
+    "others": []
+  },
+  {
+    "id": 4,
+    "name": "Play Room",
+    "heating": [
+      {
+        "id": "DECT_099950113766",
+        "name": "Links"
+      },
+      {
+        "id": "DECT_099950116522",
+        "name": "Rechts"
+      }
+    ],
+    "lighting": [],
+    "others": []
+  },
+  {
+    "id": 5,
+    "name": "Bathroom",
+    "heating": [],
+    "lighting": [],
+    "others": []
+  },
+  {
+    "id": 6,
+    "name": "Balkony",
+    "heating": [],
+    "lighting": [],
+    "others": [
+      {
+        "id": "mqtt.0.balkonbewaesserung",
+        "info": "watering",
+        "type": "watering"
+      }
+    ]
+  }
+]

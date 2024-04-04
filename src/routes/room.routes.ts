@@ -1,20 +1,21 @@
 import { Router } from "express"
-import { getRooms, getRoom, addRoom, updateRoom, deleteRoom, getModules, addModule } from "../controller/room.controller"
+//import { getRooms, getRoom, addRoom, updateRoom, deleteRoom, getModules, addModule } from "../controller/room.controller"
+import { getRooms, getRoom, addRoom } from '../controller/room.controller'
 
 const roomRoutes = Router()
 
 roomRoutes.route('/')
   .get(getRooms)
-//.post(createRoom);
+  .post(addRoom);
   
 roomRoutes.route('/:roomId')
   .get(getRoom)
-  .put(updateRoom)
-  .delete(deleteRoom)
-  .post(addRoom)
+  //.put(updateRoom)
+  //.delete(deleteRoom)
+  //.post(addRoom)
   
-roomRoutes.route('/:roomId/modules')
+/*roomRoutes.route('/:roomId/modules')
   .get(getModules)
-  .post(addModule)
+  .post(addModule)*/
 
 export default roomRoutes

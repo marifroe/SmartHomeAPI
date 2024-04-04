@@ -1,9 +1,9 @@
 import { ModuleType } from "../enum/moduleType.enum";
 
 export interface Module {
-  readonly id: number;
-  name: string;
-  type: ModuleType;
+  readonly id: number
+  name: string
+  type?: ModuleType
 }
 
 export const isModule = (module: Module): module is Module => {

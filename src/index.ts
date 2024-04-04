@@ -1,4 +1,5 @@
 import { App } from "./app";
+import express from 'express'
 
 const start = (): void => {
   const app = new App();
@@ -8,23 +9,23 @@ const start = (): void => {
 start();
 
 /*const express = require("express");
-const app = express();
 
-const port = 3000;
+const app = express()
+const port = 3000
 
 app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+  console.log(`listening on port ${port}`)
 });
 
-app.get("/foo", function (req, res) {
-  res.json({ id: 1, name: "Living Room", Modules: [] });
-});
+app.get("/", function (req, res) {
+  res.json({ id: 1, name: "Living Room", Modules: [] })
+})
 
 app.use(
   express.urlencoded({
     extended: true,
   })
-);
+)
 
 app.post("/bar", function (req, res) {
   var body = req.body;

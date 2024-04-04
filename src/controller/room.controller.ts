@@ -1,13 +1,33 @@
-import { Request, Response } from "express";
-import { Room } from "../interface/room";
-import { HeatingModule, LightingModule, Module, MusicModule, isModule, isHeatingModule, isMusicModule, isLightingModule } from "../interface/module";
+import { Request, Response } from 'express'
+import fs from 'fs/promises'
+import { HttpStatus } from '../enum/httpStatus.enum'
+import { HttpResponse } from '../domain/response'
+import { Room } from '../interface/room'
 import RoomsJson from '../data/rooms.json'
-import { HttpStatus } from "../enum/httpStatus.enum";
-import { HttpResponse } from "../domain/response";
-import fs from 'fs/promises';
-import { ModuleType } from "../enum/moduleType.enum";
+import ID from '../data/id.json'
 
-const PATH = "./src/data/roomsTest.json";
+/*import { HeatingModule, LightingModule, Module, MusicModule, isModule, isHeatingModule, isMusicModule, isLightingModule } from "../interface/module";
+
+
+import { ModuleType } from "../enum/moduleType.enum";*/
+
+const PATH = "./src/data/rooms_ioB.json";
+
+const BASE_URL = 'http://192.168.188.6:8087'
+
+const sendRequest = (url: string, method: string, body?: string) => {
+  const options: RequestInit = {
+    method: method,
+    headers: {
+      'content-type': 'application/json;charset=UTF-8',
+      'access-control-allow-origin': '*',
+    }
+  }
+
+  if (body) options.body = JSON.stringify(body)
+
+  return fetch(url, options)
+}
 
 /**
  * Get all rooms
@@ -16,18 +36,10 @@ const PATH = "./src/data/roomsTest.json";
  * @returns
  */
 //export const getRooms = async (req: Request, res: Response): Promise<Response<Room[]>> => {
-export const getRooms = (_: Request, res: Response) => {
+export const getRooms = (req: Request, res: Response) => {  
+  res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found ${RoomsJson.length} ${RoomsJson.length === 1 ? 'room' : 'rooms'}`, RoomsJson));
+}
 
-  fs.readFile(PATH, "utf8")
-    .then(data => {
-      let rooms: Room[] = JSON.parse(data);
-      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found ${rooms.length} rooms`, rooms));
-    })
-    .catch(error => {
-      console.log(error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Rooms couldn\'t be loaded. ${error}`))
-    })
-  }
 
 /**
  * Get specific room by Id
@@ -37,28 +49,43 @@ export const getRooms = (_: Request, res: Response) => {
  */
 
 export const getRoom = (req: Request, res: Response) => {
+  
+  const id: number = Number(req.params.roomId)
+  const room = RoomsJson.find(room => room.id === id)
 
-  fs.readFile(PATH, "utf8")
-    .then(data => {
-      const id: number = Number(req.params.roomId)
-      let rooms: Room[] = JSON.parse(data)
-      let room: Room | undefined = rooms.find(room => room.id === id)
-      if (!room) throw new Error(`Couldn't find room with ID ${id}`)
-      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found room with ID ${id}`, room))
-    })
-    .catch(error => {
-      console.log("Error loading room: ", error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Rooms couldn\'t be loaded. ${error}`))
-    })
-};
+  room
+    ? res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found room with ID ${id}`, room))
+    : res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Room with ID ${id} doesn't exist`))
+    
+}
 
 export const addRoom = (req: Request, res: Response) => {
-  let room: Room = {
+
+  const roomData = req.body as Room
+  const id = ID.highestId + 1
+
+  let newRoom = {
+    ...roomData,
+    id: id
+  }
+
+  ID.highestId = id
+
+  fs.writeFile('../data/id.json', JSON.stringify(ID))
+    .then(res => console.log(`Incremented ID. New value: ${res}`))
+    .catch(error => console.log('Couldn\'t increment ID'))
+  
+  res.send(newRoom)
+
+  /*let room: Room = {
     id: 
     name: req.body.name
     modules: []
-  }
+  }*/
 }
+
+
+
 
 /** 
  * Update an existing room.
@@ -66,7 +93,7 @@ export const addRoom = (req: Request, res: Response) => {
 
 export const updateRoom = (req: Request, res: Response) => {
 
-  const id: number = Number(req.params.roomId)
+  /*const id: number = Number(req.params.roomId)
   
   // Create updated room content
   let roomUpdates: Room = {
@@ -154,7 +181,7 @@ export const updateRoom = (req: Request, res: Response) => {
 }
 
 export const deleteRoom = (req: Request, res: Response) => {
-
+/*
   fs.readFile(PATH, "utf-8")
     .then(data => {
       let id = Number(req.params.roomId)
@@ -187,8 +214,8 @@ export const deleteRoom = (req: Request, res: Response) => {
   //return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, 'Room deleted'));
 
   //if not found
-  //return res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, 'Room not found'));
-};
+  //return res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, 'Room not found'));*/
+}
 
 
 
@@ -199,7 +226,7 @@ export const deleteRoom = (req: Request, res: Response) => {
  * @param res 
  */
 export const addModule = (req: Request, res: Response) => {
-  const roomId = Number(req.params.roomId);
+  /*const roomId = Number(req.params.roomId);
   const moduleType: String = req.body.type;
   let newModule: Module | HeatingModule | MusicModule | LightingModule | undefined;
   let rooms: Room[];
@@ -216,7 +243,7 @@ export const addModule = (req: Request, res: Response) => {
         tempHigh: req.body.tempHigh,
         tempLow: req.body.tempLow,
         schedule: req.body.schedule
-      };*/
+      };
 
       newModule =
         isHeatingModule(req.body)
@@ -228,7 +255,7 @@ export const addModule = (req: Request, res: Response) => {
             tempHigh: req.body.tempHigh,
             tempLow: req.body.tempLow,
             schedule: req.body.schedule
-          })*/
+          })
           ? {
             id: req.body.id,
             name: req.body.name,
@@ -268,7 +295,7 @@ export const addModule = (req: Request, res: Response) => {
     id: req.body.id,
     name: req.body.name,
     type: moduleType
-  };*/
+  };
 
   if (!newModule) return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Invalid module structure'));
 
@@ -326,7 +353,7 @@ export const addModule = (req: Request, res: Response) => {
 }
 
 export const getModules = (req: Request, res: Response) => {
-  const roomId = Number(req.params.roomId);
+  /*const roomId = Number(req.params.roomId);
   let rooms: Room[];
   let room: Room | undefined;
 
@@ -339,5 +366,5 @@ export const getModules = (req: Request, res: Response) => {
     .catch(error => {
       console.error(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Not found'));
-    })
+    })*/
 }
