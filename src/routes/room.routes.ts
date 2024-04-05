@@ -1,6 +1,5 @@
 import { Router } from "express"
-//import { getRooms, getRoom, addRoom, updateRoom, deleteRoom, getModules, addModule } from "../controller/room.controller"
-import { getRooms, getRoom, addRoom } from '../controller/room.controller'
+import { getRooms, getRoom, addRoom, deleteRoom } from '../controller/room.controller'
 
 const roomRoutes = Router()
 
@@ -11,7 +10,7 @@ roomRoutes.route('/')
 roomRoutes.route('/:roomId')
   .get(getRoom)
   //.put(updateRoom)
-  //.delete(deleteRoom)
+  .delete(deleteRoom)
   //.post(addRoom)
   
 /*roomRoutes.route('/:roomId/modules')

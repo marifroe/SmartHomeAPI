@@ -3,16 +3,15 @@ import fs from 'fs/promises'
 import { HttpStatus } from '../enum/httpStatus.enum'
 import { HttpResponse } from '../domain/response'
 import { Room } from '../interface/room'
-import RoomsJson from '../data/rooms.json'
-import ID from '../data/id.json'
 
 /*import { HeatingModule, LightingModule, Module, MusicModule, isModule, isHeatingModule, isMusicModule, isLightingModule } from "../interface/module";
 
 
 import { ModuleType } from "../enum/moduleType.enum";*/
 
-const PATH = "./src/data/rooms_ioB.json";
-
+const PATH_ROOMS = "./src/data/rooms_ioB.json"
+const PATH_ID = './src/data/id.json'
+const PATH_ID_SIMPLE = './src/data/idSimple.txt'
 const BASE_URL = 'http://192.168.188.6:8087'
 
 const sendRequest = (url: string, method: string, body?: string) => {
@@ -29,6 +28,59 @@ const sendRequest = (url: string, method: string, body?: string) => {
   return fetch(url, options)
 }
 
+const loadRooms = () => new Promise((resolve: (value: Room[]) => void, reject: (reason: Error) => void) => {
+
+  let rooms: Room[] | undefined
+
+  fs.readFile(PATH_ROOMS, 'utf-8')
+    .then(data => {
+      rooms = JSON.parse(data)
+      if (rooms) resolve(rooms)
+      else throw new Error('Failed parsing ID file.')
+    })
+    .catch(error => {
+      console.log('Error! Couldn\'t load rooms. ' + error)
+      reject(error)
+    })
+
+})
+
+const writeRooms = (rooms: Room[]) => new Promise((resolve: (value: Room[]) => void, reject: (reason: Error) => void) => {
+
+  fs.writeFile(PATH_ROOMS, JSON.stringify(rooms))
+    .then(() => resolve(rooms))
+    .catch(error => {
+      console.log('Error! Couldn\'t write rooms. ' + error)
+      reject(error)
+    })
+})
+
+const writeID = (id: number) => new Promise((resolve: (value: number) => void, reject: (reason: Error) => void) => {
+
+  fs.writeFile(PATH_ID_SIMPLE, String(id))
+    .then(() => resolve(id))
+    .catch(error => {
+      console.log('Error! Couldn\'t write new ID. ' + error)
+      reject(error)
+    })
+})
+
+const loadId = () => new Promise((resolve: (value: number) => void, reject: (reason: Error) => void) => {
+
+  fs.readFile(PATH_ID_SIMPLE, 'utf-8')
+    .then(data => {
+
+      const id = Number(data)
+      
+      if (id) resolve(id)
+      else throw new Error('Failed reading ID from file.')
+    })
+    .catch(error => {
+      console.log(error)
+      reject(new Error('Error! Couldn\'t load ID. ' + error))
+    })
+})
+
 /**
  * Get all rooms
  * @param req 
@@ -36,8 +88,10 @@ const sendRequest = (url: string, method: string, body?: string) => {
  * @returns
  */
 //export const getRooms = async (req: Request, res: Response): Promise<Response<Room[]>> => {
-export const getRooms = (req: Request, res: Response) => {  
-  res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found ${RoomsJson.length} ${RoomsJson.length === 1 ? 'room' : 'rooms'}`, RoomsJson));
+export const getRooms = (req: Request, res: Response) => {
+  loadRooms()
+    .then(rooms => res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found ${rooms.length} ${rooms.length === 1 ? 'room' : 'rooms'}`, rooms)))
+    .catch(error =>  res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Error! Couldn\'t load rooms. ${error}`)))
 }
 
 
@@ -49,39 +103,62 @@ export const getRooms = (req: Request, res: Response) => {
  */
 
 export const getRoom = (req: Request, res: Response) => {
-  
-  const id: number = Number(req.params.roomId)
-  const room = RoomsJson.find(room => room.id === id)
 
-  room
-    ? res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found room with ID ${id}`, room))
-    : res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Room with ID ${id} doesn't exist`))
+  const id: number = Number(req.params.roomId)
+  if (!id || isNaN(id)) return res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Error! Please enter a valid ID.`))
+
+  loadRooms()
+    .then(rooms => {
+      const room = rooms.find(room => room.id === id)
+      room
+      ? res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Found room with ID ${id}.`, room))
+      : res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Room with ID ${id} doesn't exist.`))
+    })
+    .catch(error => {
+      console.log('Error! Couldn\'t load room. ' + error)
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Error! Couldn\'t load rooms. ${error}`))
+    })
     
 }
 
 export const addRoom = (req: Request, res: Response) => {
 
-  const roomData = req.body as Room
-  const id = ID.highestId + 1
+  let newId: number
+  let newRoom: Room
+  let updatedRooms: Room[]
 
-  let newRoom = {
-    ...roomData,
-    id: id
-  }
+  const roomRequest: Room = req.body
 
-  ID.highestId = id
-
-  fs.writeFile('../data/id.json', JSON.stringify(ID))
-    .then(res => console.log(`Incremented ID. New value: ${res}`))
-    .catch(error => console.log('Couldn\'t increment ID'))
+  if (!roomRequest) return res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, 'Error! Couldn\'t add room. Provided room info does not conform to required format.'))
   
-  res.send(newRoom)
-
-  /*let room: Room = {
-    id: 
-    name: req.body.name
-    modules: []
-  }*/
+  loadId()
+    .then(id => {
+      newId = id + 1
+      return loadRooms()
+    })
+    .then(rooms => {
+      updatedRooms = [...rooms]
+      newRoom = {
+        ...roomRequest,
+        id: newId
+      }
+      updatedRooms.push(newRoom)
+      return writeID(newId)
+    })
+    .then(id => {
+      console.log('Wrote incremented ID to file. New ID highest existing ID is ' + id)
+      return writeRooms(updatedRooms)
+    })
+    .then(rooms => {
+      console.log('Wrote to rooms file:')
+      console.log(rooms)
+      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, 'Added room.', newRoom))
+    })
+    .catch(error => {
+      console.log(error)
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Error! Couldn\'t add room. ${error}`))
+    })
+  
 }
 
 
@@ -180,41 +257,40 @@ export const updateRoom = (req: Request, res: Response) => {
   }*/
 }
 
+class InvalidError extends Error {
+  constructor(msg: string) {
+    super(msg)
+  }
+}
+
 export const deleteRoom = (req: Request, res: Response) => {
-/*
-  fs.readFile(PATH, "utf-8")
-    .then(data => {
-      let id = Number(req.params.roomId)
-      let rooms: Room[] = JSON.parse(data)
-      let deletedRoom: Room | null = null
-      let index: number | null = null
-      
-      for (let i = 0; i < rooms.length; i++) {
-        let room = rooms[i]
-        if (room.id === id) {
-          deletedRoom = room
-          index = i
-          break;                                                               
-        }
-      }  
 
-      if (!deletedRoom) throw new Error(`Couldn't find room with ID ${id}`);
+  const id: number = Number(req.params.roomId)
+  if (!id || isNaN(id)) return res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Error! Please enter a valid ID.`))
+  
+  let roomToDelete: Room | undefined
 
-   ( deletedRoom && index ) &&
-    fs.writeFile("./src/data/roomsTest.json", JSON.stringify(rooms.splice(index, 1), null, 2))
-      .then(response => {
-        return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Deleted room with ID ${id}`, deletedRoom ? deletedRoom : undefined))
+  loadRooms()
+    .then(rooms => {
+      let index: number = -1
+      roomToDelete = rooms.find((room, i) => {
+        index = i
+        return room.id === id
       })
+
+      if (index === -1 || !roomToDelete) throw new InvalidError(`Room with ID ${id} doesn't exist.`) 
+      
+      rooms.splice(index, 1)
+
+      return writeRooms(rooms)
+    })
+    .then(_ => {
+      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Deleted room with ID ${id}`, roomToDelete))
     })
     .catch(error => {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Room couldn\'t be deleted. ${error}`));
+      if (error instanceof InvalidError) return res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, `Room with ID ${id} doesn't exist.`))
+      else return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, `Error! Couldn\'t delete room. ${error}`))
     })
-
-  //if patient found and deleted
-  //return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, 'Room deleted'));
-
-  //if not found
-  //return res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, 'Room not found'));*/
 }
 
 
