@@ -7,6 +7,7 @@ export interface Module {
 }
 
 export const isModule = (module: Module): module is Module => {
+  console.log(module)
   return (module.id && module.name) ? true : false;
 }
 

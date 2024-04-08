@@ -1,11 +1,11 @@
 import { Router } from "express"
-import { setTemp } from '../controller/temp.controller'
+import { setTemp } from '../controller/heating.controller'
 
 const tempRoutes = Router()
 
 tempRoutes.route('/')
-  //.get(getLights)
-
+//.get(getLights)
+  
 tempRoutes.route('/:deviceId/:temp')
   .put(setTemp)
 

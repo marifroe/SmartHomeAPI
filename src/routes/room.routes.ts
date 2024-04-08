@@ -1,5 +1,7 @@
 import { Router } from "express"
 import { getRooms, getRoom, addRoom, deleteRoom } from '../controller/room.controller'
+import { getThermostatsByRoom, setThermostatsByRoom } from '../controller/heating.controller'
+//import { getLightByRoom } from '../controller/light.controller'
 
 const roomRoutes = Router()
 
@@ -13,8 +15,13 @@ roomRoutes.route('/:roomId')
   .delete(deleteRoom)
   //.post(addRoom)
   
-/*roomRoutes.route('/:roomId/modules')
-  .get(getModules)
-  .post(addModule)*/
+roomRoutes.route('/:roomId/light')
+  //.put(toggleLight)
+  
+roomRoutes.route('/:roomId/heating')
+  .get(getThermostatsByRoom)
+
+roomRoutes.route('/:roomId/heating/:variable/:value')
+  .put(setThermostatsByRoom)
 
 export default roomRoutes

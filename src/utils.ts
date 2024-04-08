@@ -20,8 +20,8 @@ type IdInfo = {
   return id
 }*/
 
-const parseId = (data: string) => {
-  /* Read ID info file */
+/*const parseId = (data: string) => {
+  /* Read ID info file 
   let idInfo: IdInfo = JSON.parse(data, (key, value) => {
     
   })
@@ -46,10 +46,10 @@ export const idProvider = (): number | undefined => {
         throw new Error("ID info unavailable.")
       }
       
-      if (vacantIds.length > 0) {     /* Use vacant ID */
+      if (vacantIds.length > 0) {     /* Use vacant ID 
         newId = vacantIds[0]
         vacantIds.shift()
-      } else {                            /* Use highest ID */
+      } else {                            /* Use highest ID 
         highest = newId = highest + 1
       }
 
@@ -87,4 +87,4 @@ export const idTracker = (removeId: number): boolean => {
         return false
       }
     })
-}
+}*/

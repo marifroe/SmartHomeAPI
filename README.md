@@ -4,6 +4,42 @@
 
 ![systemarchitecture](./figures/systemarchitecture.png)
 
+## Functionality
+
+### General
+- turn all off (e.g. when leaving apartment)
+
+### Lighting
+- turn on/off
+- dim
+- color temperature
+- color hue
+
+### Heating
+- set temperature
+- open window mode (turn heating off)
+- vacation mode
+- schedule
+
+### Socket
+- turn on/off
+- schedule
+
+### Watering System
+- turn on/off (main valve)
+- turn on/off (individual valves)
+- display water level
+- turn auto watering on/off
+- warning valve open
+
+### Window sensor
+- display window state
+- reminder/timer
+
+### NFC
+- scan NFC tag to open controller app with room's view
+- setup NFC tag / assign room by ID
+
 ## Setup
 
 1. Create project folder
