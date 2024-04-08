@@ -69,11 +69,11 @@ export const setThermostatsByRoom = (req: Request, res: Response) => {
     .then(rooms => {
       const room = rooms.find(room => room.id === roomId)
       if (!room) throw new InvalidError(`Room with ID ${roomId} doesn't exist`)
-      if (room.heating.length === 0) return 'Room has no associated thermostats'
+      if (room.heating.length === 0) throw new InvalidError('Room has no associated thermostats')
       return setThermostatsByIds(room.heating, variable, value)
     })
-    .then(answer => {
-      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, answer))
+    .then(thermostats => {
+      return res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, `Set ${variable} to ${value} for ${thermostats.length} thermostats`, thermostats))
     })
     .catch(error => {
       if (error instanceof InvalidError) return res.status(HttpStatus.BAD_REQUEST).send(new HttpResponse(HttpStatus.BAD_REQUEST, error.message))
@@ -88,12 +88,12 @@ export const setThermostatsByRoom = (req: Request, res: Response) => {
  * @param setValue Value the variable should be set to
  * @returns 
  */
-const createBulkRequest = (modules: Module[], variable: string, setValue?: number): string => {
+const createBulkRequest = (modules: Module[], separator: ',' | '&', variable: string, setValue?: number): string => {
 
   let bulk = ''
 
   modules.forEach((id, index) => {
-    if (index !== 0) bulk += ','
+    if (index !== 0) bulk += separator
     bulk = bulk + `fritzdect.1.${id.id}.${variable}`
     if(setValue) bulk += `=${setValue}`
   })
@@ -109,7 +109,7 @@ const createBulkRequest = (modules: Module[], variable: string, setValue?: numbe
  */
 export const getThermostatsByIds = (thermostats: Module[]) => new Promise((resolve: (value: any[]) => void, reject: (reasond: Error) => void) => {
 
-  const bulk = createBulkRequest(thermostats, 'tsoll')
+  const bulk = createBulkRequest(thermostats, ',', 'tsoll')
 
   sendRequest(`${BASE_URL}/getBulk/${bulk}?prettyPrint`, 'GET')
     .then(response => response.json())
@@ -128,12 +128,13 @@ export const getThermostatsByIds = (thermostats: Module[]) => new Promise((resol
  * @param value Value the variable should be set to
  * @returns 
  */
-export const setThermostatsByIds = (thermostats: Module[], variable: string, value: number) => new Promise((resolve: (value: string) => void, reject) => {
+export const setThermostatsByIds = (thermostats: Module[], variable: string, value: number) => new Promise((resolve: (value: any[]) => void, reject) => {
 
-  const bulk = createBulkRequest(thermostats, variable, value)
+  const bulk = createBulkRequest(thermostats, '&', variable, value)
 
-  sendRequest(`${BASE_URL}/setBulk/${bulk}?prettyPrint`, 'SET')
-    .then(_ => resolve(`Set ${variable} to ${value} for ${thermostats.length} thermostats`))
+  sendRequest(`${BASE_URL}/setBulk?${bulk}&prettyPrint`, 'PUT')
+    .then(response => response.json())
+    .then(therms => resolve(therms))
     .catch(error => reject(error))
 })
 
