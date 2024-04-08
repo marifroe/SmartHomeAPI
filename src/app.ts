@@ -31,7 +31,7 @@ export class App {
   private routes(): void {
     this.app.use('/rooms', roomRoutes);
     this.app.use('/light', lightRoutes)
-    this.app.use('/temp', heatingRoutes)
+    this.app.use('/heating', heatingRoutes)
     this.app.get('/', (req: Request, res: Response) => res.status(HttpStatus.OK).send(new HttpResponse(HttpStatus.OK, 'Server up and running')));
     this.app.all('*', (req: Request, res: Response) => res.status(HttpStatus.NOT_FOUND).send(new HttpResponse(HttpStatus.NOT_FOUND, this.ROUTE_NOT_FOUND)));
   }

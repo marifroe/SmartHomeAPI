@@ -173,7 +173,12 @@ export const getTempById = (id: string) => new Promise((resolve: (value: JSON) =
 })
 
 
-
+/**
+ * Set temperature by providing thermostat ID.
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export const setTemp = (req: Request, res: Response) => {
   const id = req.params.deviceId
   const temp = Number(req.params.temp)
@@ -198,6 +203,13 @@ export const setTemp = (req: Request, res: Response) => {
     })*/
 }
 
+
+/**
+ * Send request to ioBroker to set target temperature of thermostat.
+ * @param id Thermostat ID
+ * @param temp Target Temperature
+ * @returns 
+ */
 export const setTempById = (id: string, temp: number) => new Promise((resolve: (value: JSON) => void, reject: (reason: Error) => void) => {
   
   sendRequest(`${BASE_URL}/set/fritzdect.1.${id}.tsoll?value=${temp}&prettyPrint`, 'PUT')
