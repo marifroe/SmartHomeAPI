@@ -4,19 +4,37 @@
 
 ![systemarchitecture](./figures/systemarchitecture.png)
 
+- [ioBroker Simple API adapter](https://github.com/ioBroker/ioBroker.simple-api)
+
 ## Functionality
 
 ### General
 - turn all off (e.g. when leaving apartment)
 
+### Room Management
+- **Get Rooms** <br /> `GET: localhost:3000/rooms`
+- **Add Room** <br /> `POST: localhost:3000/rooms`
+  ```
+  body: {
+    "name": "Cinema",
+    "heating": [],
+    "lighting": [],
+    "others": []
+  }
+  ``` 
+- add thermostat
+- add light
+
 ### Lighting
-- turn on/off
-- dim
+- **Turn on/off** <br /> `PUT: localhost:3000/light/:lightId/toggle?prettyPrint`
+- **Dim** <br /> `PUT: localhost:3000/light/:lightId/:dimVal?prettyPrint`
 - color temperature
 - color hue
 
 ### Heating
-- set temperature
+- **Get Target Temp** <br /> `GET: localhost:3000/heating/:deviceId/tsoll` 
+- **Set Target Temp (individually)** <br /> `PUT: localhost:3000/heating/:deviceId/tsoll/:targettemp`
+- **Set Target Temp (multiple)** <br /> `PUT: localhost:3000/rooms/:roomId/heating/tsoll/:targettemp`
 - open window mode (turn heating off)
 - vacation mode
 - schedule
